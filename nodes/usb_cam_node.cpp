@@ -36,7 +36,7 @@
 
 #include <ros/ros.h>
 #include <usb_cam/usb_cam.h>
-#include <image_transport/image_transport.h>
+#include <sensor_msgs/CompressedImage.h>
 #include <camera_info_manager/camera_info_manager.h>
 #include <sstream>
 #include <std_srvs/Empty.h>
@@ -50,8 +50,9 @@ public:
   ros::NodeHandle node_;
 
   // shared image message
-  sensor_msgs::Image img_;
-  image_transport::CameraPublisher image_pub_;
+  sensor_msgs::CompressedImage img_;
+  ros::Publisher image_pub_;
+  ros::Publisher camera_info_pub_;
 
   // parameters
   std::string video_device_name_, io_method_name_, pixel_format_name_, camera_name_, camera_info_url_;
@@ -85,8 +86,8 @@ public:
       node_("~")
   {
     // advertise the main image topic
-    image_transport::ImageTransport it(node_);
-    image_pub_ = it.advertiseCamera("image_raw", 1);
+    image_pub_ = node_.advertise<sensor_msgs::CompressedImage>("image/compressed", 1);
+    camera_info_pub_ = node_.advertise<sensor_msgs::CameraInfo>("image/camera_info", 1);
 
     // grab the parameters
     node_.param("video_device", video_device_name_, std::string("/dev/video0"));
@@ -99,8 +100,7 @@ public:
     node_.param("image_width", image_width_, 640);
     node_.param("image_height", image_height_, 480);
     node_.param("framerate", framerate_, 30);
-    // possible values: yuyv, uyvy, mjpeg, yuvmono10, rgb24
-    node_.param("pixel_format", pixel_format_name_, std::string("mjpeg"));
+	pixel_format_name_ = std::string("mjpeg");
     // enable/disable autofocus
     node_.param("autofocus", autofocus_, false);
     node_.param("focus", focus_, -1); //0-255, -1 "leave alone"
@@ -237,7 +237,8 @@ public:
     ci->header.stamp = img_.header.stamp;
 
     // publish the image
-    image_pub_.publish(img_, *ci);
+	camera_info_pub_.publish(*ci);
+    image_pub_.publish(img_);
 
     return true;
   }
