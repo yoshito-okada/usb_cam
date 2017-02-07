@@ -1,7 +1,7 @@
 <package>
-  <name>usb_cam</name>
+  <name>usb_cam_jpeg</name>
   <version>0.3.4</version>
-  <description>A ROS Driver for V4L USB Cameras</description>
+  <description>A ROS Driver for V4L USB Cameras (raw jpeg version)</description>
 
   <maintainer email="rctoris@wpi.edu">Russell Toris</maintainer>
   <author email="benjamin.pitzer@bosch.com">Benjamin Pitzer</author>
