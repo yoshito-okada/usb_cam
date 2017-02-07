@@ -85,10 +85,34 @@ UsbCam::~UsbCam()
   shutdown();
 }
 
-void UsbCam::process_image(const void * src, int len, camera_image_t *dest)
+int UsbCam::process_image(const void * src, int len, camera_image_t *dest)
 {
-	memcpy(dest->image, src, len);
-	dest->actual_image_size = len;
+  const unsigned char * src8 = (unsigned char *)src;
+  bool valid(false);
+
+  if(src8[0] != 0xFF || src8[1] != 0xD8)
+  {
+    ROS_ERROR("Invalid jpeg header.");
+    return 0;
+  }
+  for(int i = len - 2; i > len - 16; i --)
+  {
+    if(src8[i] == 0xFF && src8[i+1] == 0xD9)
+    {
+      valid = true;
+      break;
+    }
+  }
+  if(!valid)
+  {
+    ROS_ERROR("Invalid jpeg footer.");
+    return 0;
+  }
+
+  memcpy(dest->image, src, len);
+  dest->actual_image_size = len;
+
+  return 1;
 }
 
 int UsbCam::read_frame()
@@ -118,7 +142,8 @@ int UsbCam::read_frame()
         }
       }
 
-      process_image(buffers_[0].start, len, image_);
+      if(!process_image(buffers_[0].start, len, image_))
+        return 0;
 
       break;
 
@@ -147,7 +172,8 @@ int UsbCam::read_frame()
 
       assert(buf.index < n_buffers_);
       len = buf.bytesused;
-      process_image(buffers_[buf.index].start, len, image_);
+      if(!process_image(buffers_[buf.index].start, len, image_))
+        return 0;
 
       if (-1 == xioctl(fd_, VIDIOC_QBUF, &buf))
         errno_exit("VIDIOC_QBUF");
@@ -183,7 +209,8 @@ int UsbCam::read_frame()
 
       assert(i < n_buffers_);
       len = buf.bytesused;
-      process_image((void *)buf.m.userptr, len, image_);
+      if(process_image((void *)buf.m.userptr, len, image_))
+        return 0;
 
       if (-1 == xioctl(fd_, VIDIOC_QBUF, &buf))
         errno_exit("VIDIOC_QBUF");
@@ -696,8 +723,8 @@ void UsbCam::grab_image()
     exit(EXIT_FAILURE);
   }
 
-  read_frame();
-  image_->is_new = 1;
+  if(read_frame())
+	  image_->is_new = 1;
 }
 
 // enables/disables auto focus
