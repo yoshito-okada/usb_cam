@@ -60,6 +60,7 @@ public:
   bool streaming_status_;
   int image_width_, image_height_, framerate_, exposure_, brightness_, contrast_, saturation_, sharpness_, focus_,
       white_balance_, gain_;
+  int frame_num_, drop_interval_;
   bool autofocus_, autoexposure_, auto_white_balance_;
   boost::shared_ptr<camera_info_manager::CameraInfoManager> cinfo_;
 
@@ -111,6 +112,9 @@ public:
     // enable/disable auto white balance temperature
     node_.param("auto_white_balance", auto_white_balance_, true);
     node_.param("white_balance", white_balance_, 4000);
+    node_.param("drop_interval", drop_interval_, 1);
+    if(drop_interval_ <= 0) drop_interval_ = 1;
+    frame_num_ = 0;
 
     // load the camera info
     node_.param("camera_frame_id", img_.header.frame_id, std::string("head_camera"));
@@ -236,9 +240,13 @@ public:
     ci->header.frame_id = img_.header.frame_id;
     ci->header.stamp = img_.header.stamp;
 
-    // publish the image
-	camera_info_pub_.publish(*ci);
-    image_pub_.publish(img_);
+    frame_num_ ++;
+    if(frame_num_ % drop_interval_ == 0)
+    {
+      // publish the image
+      camera_info_pub_.publish(*ci);
+      image_pub_.publish(img_);
+    }
 
     return true;
   }
