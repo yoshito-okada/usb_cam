@@ -227,7 +227,6 @@ public:
 
   virtual ~UsbCamNode()
   {
-    cam_.shutdown();
   }
 
   bool take_and_send_image()
