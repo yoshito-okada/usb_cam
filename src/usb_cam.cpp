@@ -492,7 +492,11 @@ void UsbCam::process_image(const void * src, int len, camera_image_t *dest)
   else if (pixelformat_ == V4L2_PIX_FMT_UYVY)
     uyvy2rgb((char*)src, dest->image, dest->width * dest->height);
   else if (pixelformat_ == V4L2_PIX_FMT_MJPEG)
-    mjpeg2rgb((char*)src, len, dest->image, dest->width * dest->height);
+  {
+    //mjpeg2rgb((char*)src, len, dest->image, dest->width * dest->height);
+    memcpy(dest->image, (char*)src, len);
+    dest->image_size = len;
+  }
   else if (pixelformat_ == V4L2_PIX_FMT_RGB24)
     rgb242rgb((char*)src, dest->image, dest->width * dest->height);
   else if (pixelformat_ == V4L2_PIX_FMT_GREY)
@@ -1113,6 +1117,17 @@ void UsbCam::grab_image(sensor_msgs::Image* msg)
     fillImage(*msg, "rgb8", image_->height, image_->width, 3 * image_->width,
         image_->image);
   }
+}
+
+void UsbCam::grab_image(sensor_msgs::CompressedImage* msg)
+{
+  // grab the image
+  grab_image();
+  // stamp the image
+  msg->header.stamp = ros::Time::now();
+  // fill the info
+  msg->format = "jpeg";
+  msg->data.assign(image_->image, image_->image + image_->image_size);
 }
 
 void UsbCam::grab_image()

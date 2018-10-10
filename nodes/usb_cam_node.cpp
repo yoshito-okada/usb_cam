@@ -53,6 +53,10 @@ public:
   sensor_msgs::Image img_;
   image_transport::CameraPublisher image_pub_;
 
+  //
+  sensor_msgs::CompressedImage cimg_;
+  ros::Publisher cimage_pub_;
+
   // parameters
   std::string video_device_name_, io_method_name_, pixel_format_name_, camera_name_, camera_info_url_;
   //std::string start_service_name_, start_service_name_;
@@ -87,6 +91,8 @@ public:
     // advertise the main image topic
     image_transport::ImageTransport it(node_);
     image_pub_ = it.advertiseCamera("image_raw", 1);
+
+    cimage_pub_ = node_.advertise<sensor_msgs::CompressedImage>("compressed", 1);
 
     // grab the parameters
     node_.param("video_device", video_device_name_, std::string("/dev/video0"));
@@ -228,6 +234,7 @@ public:
 
   bool take_and_send_image()
   {
+    /*
     // grab the image
     cam_.grab_image(&img_);
 
@@ -238,6 +245,10 @@ public:
 
     // publish the image
     image_pub_.publish(img_, *ci);
+    */
+
+    cam_.grab_image(&cimg_);
+    cimage_pub_.publish(cimg_);
 
     return true;
   }
