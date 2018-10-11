@@ -1,7 +1,19 @@
 usb_cam [![Build Status](https://api.travis-ci.org/bosch-ros-pkg/usb_cam.png)](https://travis-ci.org/bosch-ros-pkg/usb_cam)
 =======
 
-#### A ROS Driver for V4L USB Cameras
+### **Note about no_jpeg_decompression branch**
+
+#### Difference from other branches
+* if ~pixel_format is "mjpeg", the decompression of jpeg packets from the camera, which highly consumes the cpu, will not performed
+* instead of the decompression, raw jpeg packets will be published as sensor_msgs/CompressedImage
+* the packet topic can be subscribed using the compressed_image_transport
+
+#### Additionally-published topics
+**~packet/compressed** (sensor_msgs/CompressedImage)
+* streams raw jpeg packets from the camera
+* published only if ~pixel_format is "mjpeg"
+
+### A ROS Driver for V4L USB Cameras
 This package is based off of V4L devices specifically instead of just UVC.
 
 For full documentation, see [the ROS wiki](http://ros.org/wiki/usb_cam).
