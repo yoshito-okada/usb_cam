@@ -55,7 +55,7 @@ public:
 
   //
   sensor_msgs::CompressedImage cimg_;
-  ros::Publisher cimage_pub_;
+  ros::Publisher cimage_pub_, cinfo_pub_;
 
   // parameters
   std::string video_device_name_, io_method_name_, pixel_format_name_, camera_name_, camera_info_url_;
@@ -92,7 +92,9 @@ public:
     image_transport::ImageTransport it(node_);
     image_pub_ = it.advertiseCamera("image_raw", 1);
 
-    cimage_pub_ = node_.advertise<sensor_msgs::CompressedImage>("compressed", 1);
+    // advertise the packet topic
+    cinfo_pub_ = node_.advertise<sensor_msgs::CameraInfo>("packet/camera_info", 1);
+    cimage_pub_ = node_.advertise<sensor_msgs::CompressedImage>("packet/compressed", 1);
 
     // grab the parameters
     node_.param("video_device", video_device_name_, std::string("/dev/video0"));
@@ -234,21 +236,33 @@ public:
 
   bool take_and_send_image()
   {
-    /*
-    // grab the image
-    cam_.grab_image(&img_);
+    if (pixel_format_name_ == "mjpeg")
+    {
+      // grab the packet
+      cam_.grab_packet(&cimg_);
 
-    // grab the camera info
-    sensor_msgs::CameraInfoPtr ci(new sensor_msgs::CameraInfo(cinfo_->getCameraInfo()));
-    ci->header.frame_id = img_.header.frame_id;
-    ci->header.stamp = img_.header.stamp;
+      // grab the camera info
+      sensor_msgs::CameraInfoPtr ci(new sensor_msgs::CameraInfo(cinfo_->getCameraInfo()));
+      ci->header.frame_id = img_.header.frame_id;
+      ci->header.stamp = img_.header.stamp;
 
-    // publish the image
-    image_pub_.publish(img_, *ci);
-    */
+      //
+      cimage_pub_.publish(cimg_);
+      cinfo_pub_.publish(ci);
+    }
+    else
+    {
+      // grab the image
+      cam_.grab_image(&img_);
 
-    cam_.grab_image(&cimg_);
-    cimage_pub_.publish(cimg_);
+      // grab the camera info
+      sensor_msgs::CameraInfoPtr ci(new sensor_msgs::CameraInfo(cinfo_->getCameraInfo()));
+      ci->header.frame_id = img_.header.frame_id;
+      ci->header.stamp = img_.header.stamp;
+
+      // publish the image
+      image_pub_.publish(img_, *ci);
+    }
 
     return true;
   }

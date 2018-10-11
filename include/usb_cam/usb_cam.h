@@ -83,7 +83,7 @@ class UsbCam {
 
   // grabs a new image from the camera
   void grab_image(sensor_msgs::Image* image);
-  void grab_image(sensor_msgs::CompressedImage* msg);
+  void grab_packet(sensor_msgs::CompressedImage* msg);
 
   // enables/disable auto focus
   void set_auto_focus(int value);
@@ -119,8 +119,8 @@ class UsbCam {
 
   int init_mjpeg_decoder(int image_width, int image_height);
   void mjpeg2rgb(char *MJPEG, int len, char *RGB, int NumPixels);
-  void process_image(const void * src, int len, camera_image_t *dest);
-  int read_frame();
+  void process_image(const void * src, int len, camera_image_t *dest, const bool do_decompress);
+  int read_frame(const bool do_decompress);
   void uninit_device(void);
   void init_read(unsigned int buffer_size);
   void init_mmap(void);
@@ -128,7 +128,7 @@ class UsbCam {
   void init_device(int image_width, int image_height, int framerate);
   void close_device(void);
   void open_device(void);
-  void grab_image();
+  void grab_image(const bool do_decompress);
   bool is_capturing_;
 
 
