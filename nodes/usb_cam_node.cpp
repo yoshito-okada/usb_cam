@@ -55,7 +55,7 @@ public:
 
   //
   sensor_msgs::CompressedImage cimg_;
-  ros::Publisher cimage_pub_, cinfo_pub_;
+  ros::Publisher cimage_pub_;
 
   // parameters
   std::string video_device_name_, io_method_name_, pixel_format_name_, camera_name_, camera_info_url_;
@@ -93,7 +93,6 @@ public:
     image_pub_ = it.advertiseCamera("image_raw", 1);
 
     // advertise the packet topic
-    cinfo_pub_ = node_.advertise<sensor_msgs::CameraInfo>("packet/camera_info", 1);
     cimage_pub_ = node_.advertise<sensor_msgs::CompressedImage>("packet/compressed", 1);
 
     // grab the parameters
@@ -248,7 +247,7 @@ public:
 
       //
       cimage_pub_.publish(cimg_);
-      cinfo_pub_.publish(ci);
+      image_pub_.publish(sensor_msgs::Image(), *ci);
     }
     else
     {
