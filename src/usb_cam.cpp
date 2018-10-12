@@ -501,6 +501,10 @@ void UsbCam::process_image(const void * src, int len, camera_image_t *dest,
     uyvy2rgb((char*)src, dest->image, dest->width * dest->height);
   else if (pixelformat_ == V4L2_PIX_FMT_MJPEG)
     mjpeg2rgb((char*)src, len, dest->image, dest->width * dest->height);
+  else if (pixelformat_ == V4L2_PIX_FMT_H264)
+  {
+    ROS_ERROR("Decoding h264 is not supported in the current version");
+  }
   else if (pixelformat_ == V4L2_PIX_FMT_RGB24)
     rgb242rgb((char*)src, dest->image, dest->width * dest->height);
   else if (pixelformat_ == V4L2_PIX_FMT_GREY)
@@ -1044,6 +1048,11 @@ void UsbCam::start(const std::string& dev, io_method io_method,
     pixelformat_ = V4L2_PIX_FMT_MJPEG;
     init_mjpeg_decoder(image_width, image_height);
   }
+  else if (pixel_format == PIXEL_FORMAT_H264)
+  {
+    pixelformat_ = V4L2_PIX_FMT_H264;
+    // init_h264_decorder()
+  }
   else if (pixel_format == PIXEL_FORMAT_YUVMONO10)
   {
     //actually format V4L2_PIX_FMT_Y16 (10-bit mono expresed as 16-bit pixels), but we need to use the advertised type (yuyv)
@@ -1132,15 +1141,17 @@ void UsbCam::grab_packet(sensor_msgs::CompressedImage* msg)
   // fill the info
   switch (pixelformat_)
   {
-    case PIXEL_FORMAT_MJPEG:
+    case V4L2_PIX_FMT_MJPEG:
       msg->format = "jpeg";
       break;
-    case PIXEL_FORMAT_YUYV:
-    case PIXEL_FORMAT_UYVY:
-    case PIXEL_FORMAT_YUVMONO10:
-    case PIXEL_FORMAT_RGB24:
-    case PIXEL_FORMAT_GREY:
-    case PIXEL_FORMAT_UNKNOWN:
+    case V4L2_PIX_FMT_H264:
+      msg->format = "h264";
+      break;
+    case V4L2_PIX_FMT_YUYV:
+    case V4L2_PIX_FMT_UYVY:
+    case V4L2_PIX_FMT_RGB24:
+    case V4L2_PIX_FMT_GREY:
+    default:
       msg->format = "unknown"; // TODO: fill right format name
       break;
   }
@@ -1283,6 +1294,8 @@ UsbCam::pixel_format UsbCam::pixel_format_from_string(const std::string& str)
       return PIXEL_FORMAT_UYVY;
     else if (str == "mjpeg")
       return PIXEL_FORMAT_MJPEG;
+    else if (str == "h264")
+      return PIXEL_FORMAT_H264;
     else if (str == "yuvmono10")
       return PIXEL_FORMAT_YUVMONO10;
     else if (str == "rgb24")
