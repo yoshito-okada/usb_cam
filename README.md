@@ -10,13 +10,16 @@ usb_cam [![Build Status](https://api.travis-ci.org/bosch-ros-pkg/usb_cam.png)](h
 * the packet topic can be subscribed using the compressed_image_transport if the packet's format is supported by the subscriber
 
 #### Additionally-published topics
-**~packet/compressed** (sensor_msgs/CompressedImage)
+**~packet/<user-defined>** (sensor_msgs/CompressedImage)
 * streams raw packets from the camera
 * published only if the node in the packet mode
 
 #### Additional paramters
 **~publish_packet** (bool, default: false)
 * the packet mode is enabled if true
+
+**~packet_transport** (string, default: "compressed")
+* leaf topic name of packet messages
 
 ### A ROS Driver for V4L USB Cameras
 This package is based off of V4L devices specifically instead of just UVC.

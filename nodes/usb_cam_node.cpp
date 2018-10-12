@@ -94,7 +94,8 @@ public:
     image_pub_ = it.advertiseCamera("image_raw", 1);
 
     // advertise the packet topic
-    packet_pub_ = node_.advertise<sensor_msgs::CompressedImage>("packet/compressed", 1);
+    packet_pub_ = node_.advertise<sensor_msgs::CompressedImage>(
+      "packet/" + node_.param<std::string>("packet_transport", "compressed"), 1);
 
     // grab the parameters
     node_.param("video_device", video_device_name_, std::string("/dev/video0"));
