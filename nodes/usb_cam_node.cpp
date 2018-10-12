@@ -54,8 +54,9 @@ public:
   image_transport::CameraPublisher image_pub_;
 
   //
-  sensor_msgs::CompressedImage cimg_;
-  ros::Publisher cimage_pub_;
+  sensor_msgs::CompressedImage pkt_;
+  ros::Publisher packet_pub_;
+  bool do_publish_packet_;
 
   // parameters
   std::string video_device_name_, io_method_name_, pixel_format_name_, camera_name_, camera_info_url_;
@@ -93,7 +94,7 @@ public:
     image_pub_ = it.advertiseCamera("image_raw", 1);
 
     // advertise the packet topic
-    cimage_pub_ = node_.advertise<sensor_msgs::CompressedImage>("packet/compressed", 1);
+    packet_pub_ = node_.advertise<sensor_msgs::CompressedImage>("packet/compressed", 1);
 
     // grab the parameters
     node_.param("video_device", video_device_name_, std::string("/dev/video0"));
@@ -118,6 +119,8 @@ public:
     // enable/disable auto white balance temperature
     node_.param("auto_white_balance", auto_white_balance_, true);
     node_.param("white_balance", white_balance_, 4000);
+
+    node_.param("publish_packet", do_publish_packet_, false);
 
     // load the camera info
     node_.param("camera_frame_id", img_.header.frame_id, std::string("head_camera"));
@@ -235,10 +238,10 @@ public:
 
   bool take_and_send_image()
   {
-    if (pixel_format_name_ == "mjpeg")
+    if (do_publish_packet_)
     {
       // grab the packet
-      cam_.grab_packet(&cimg_);
+      cam_.grab_packet(&pkt_);
 
       // grab the camera info
       sensor_msgs::CameraInfoPtr ci(new sensor_msgs::CameraInfo(cinfo_->getCameraInfo()));
@@ -246,7 +249,7 @@ public:
       ci->header.stamp = img_.header.stamp;
 
       //
-      cimage_pub_.publish(cimg_);
+      packet_pub_.publish(pkt_);
       image_pub_.publish(sensor_msgs::Image(), *ci);
     }
     else

@@ -1130,7 +1130,20 @@ void UsbCam::grab_packet(sensor_msgs::CompressedImage* msg)
   // stamp the image
   msg->header.stamp = ros::Time::now();
   // fill the info
-  msg->format = "jpeg";
+  switch (pixelformat_)
+  {
+    case PIXEL_FORMAT_MJPEG:
+      msg->format = "jpeg";
+      break;
+    case PIXEL_FORMAT_YUYV:
+    case PIXEL_FORMAT_UYVY:
+    case PIXEL_FORMAT_YUVMONO10:
+    case PIXEL_FORMAT_RGB24:
+    case PIXEL_FORMAT_GREY:
+    case PIXEL_FORMAT_UNKNOWN:
+      msg->format = "unknown"; // TODO: fill right format name
+      break;
+  }
   msg->data.assign(image_->image, image_->image + image_->image_size);
 }
 
